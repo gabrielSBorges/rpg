@@ -1,18 +1,22 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
+const mongoose = require('mongoose');
 
 const routes = require('./routes');
 const app = express();
 const server = require('http').Server(app);
-// const io = require('socket.io')(server);
 
-const envvars =  require('./envvars')
+const PORT = process.env.PORT || 3333;
 
-mongoose.connect(envvars.MONGODB, {
-    useNewUrlParser : true,
-    useUnifiedTopology: true
+const envvars =  require('./envvars.json');
+
+mongoose.connect(envvars.MONGO_ATLAS, {
+  useNewUrlParser : true, 
+  useUnifiedTopology: true,
+  useFindAndModify: false
 });
+
+// const io = require('socket.io')(server);
 
 // const connectedUsers = {};
 
@@ -34,4 +38,4 @@ app.use(cors());
 app.use(express.json());
 app.use(routes);
 
-server.listen(3333);
+server.listen(PORT);
