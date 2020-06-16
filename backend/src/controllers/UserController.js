@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const mongo = require('../database/mongo');
 const User = require('../models/User');
 const { validEmail, validPassword } = require('../utils/validate');
@@ -56,7 +58,7 @@ module.exports = {
     }
   },
 
-  async store(request, response) {
+  async signup(request, response) {
     const { name, email, login, password } = request.body;
     
     const validate = validateFields(name, email, login);
@@ -84,29 +86,82 @@ module.exports = {
     }
 
     if (!user) {
-      let params = {
-        model: User,
-        body: {
-          name,
-          email,
-          login,
-          password,
+      bcrypt.hash(password, 10, async (err, hash) => {
+        if (err) {
+          return response.status(500).json({ message: err });
         }
-      };
-      
-      let createUser = await mongo.create(params);
-
-      if (createUser.status !== "success") {
-        return response.status(500).json({ message: createUser.message });
-      }
-
-      return response.json({ id: createUser.data._id, message: "User successfully created" });
+        else {
+          let params = {
+            model: User,
+            body: {
+              name,
+              email,
+              login,
+              password: hash,
+            }
+          };
+          
+          let createUser = await mongo.create(params);
+    
+          if (createUser.status !== "success") {
+            return response.status(500).json({ message: createUser.message });
+          }
+          else {
+            return response.json({ id: createUser.data._id, message: "User successfully created" });
+          }
+        }
+      })
     }
     else {
       let already_taken = email == user.email && login == user.login ? ["email", "login"] : email == user.email ? ["email"] : ["login"];
       
       return response.status(400).json({ message: "User already exists", already_taken });
     }
+  },
+
+  async login(request, response) {
+    const { login, password, expires } = request.body;
+
+    let params = {
+      model: User,
+      where: { login },
+      fields: ["name", "email", "login", "password"]
+    };
+    let user = await mongo.findOne(params);
+
+    if (user.status !== "success") {
+      return response.status(500).json({ message: user.message });
+    }
+    else {
+      user = user.data;
+  
+      if (!user) {
+        return response.status(401).json({ message: "Auth failed" });
+      }
+
+      bcrypt.compare(password, user.password, (err, res) => {
+        if (res) {
+          const token = jwt.sign(
+            {
+              id: user._id,
+              name: user.name,
+              login: user.login,
+              email: user.email
+            },
+            process.env.JWT_KEY,
+            {
+              expiresIn: expires
+            }
+          );
+
+          return response.json({ message: "Auth successful", token });
+        }
+        else {
+          return response.status(401).json({ message: "Auth failed" });
+        }
+      });
+    }
+    
   },
 
   async update(request, response) {
@@ -200,20 +255,28 @@ module.exports = {
       return response.status(400).json({ message: "Password must contain at minimum 8 and maximum 15 characters and at least 1 special character, 1 number and 1 uppercase letter" });
     }
 
-    params = {
-      model: User,
-      filter: { _id: id },
-      body: {
-        password
+    bcrypt.hash(password, 10, async (err, hash) => {
+      if (err) {
+        return response.status(500).json({ message: err });
       }
-    }
-    let updatePassword = await mongo.update(params)
-
-    if (updatePassword.status !== "success") {
-      return response.status(500).json({ message: updatePassword.message });
-    }
-
-    return response.json({ message: "Password successfully updated" });
+      else {
+        params = {
+          model: User,
+          filter: { _id: id },
+          body: {
+            password: hash
+          }
+        }
+        let updatePassword = await mongo.update(params);
+    
+        if (updatePassword.status !== "success") {
+          return response.status(500).json({ message: updatePassword.message });
+        }
+        else {
+          return response.json({ message: "Password successfully updated" });
+        }
+      }
+    })
   },
 
   async delete(request, response) {
