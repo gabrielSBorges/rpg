@@ -1,14 +1,16 @@
-const { Router } = require('express')
-const UserController = require('./controllers/UserController')
+const { Router } = require('express');
+const UserController = require('./controllers/UserController');
+const auth = require('./middleware/auth');
 
-const routes = Router()
+const routes = Router();
 
 // Users
-routes.get('/users', UserController.list)
-routes.get('/users/:id', UserController.findById)
-routes.post('/users', UserController.store)
-routes.put('/users/:id', UserController.update)
-routes.put('/update-password/:id', UserController.updatePassword)
-routes.delete('/users/:id', UserController.delete)
+routes.post('/login', UserController.login);
+routes.post('/signup', UserController.signup);
+routes.put('/user/update/:id', auth, UserController.update);
+routes.put('/user/update-password/:id', auth, UserController.updatePassword);
+routes.delete('/user/delete/:id', auth, UserController.delete);
+routes.get('/user/list', auth, UserController.list);
+routes.get('/user/find/:id', auth, UserController.findById);
 
 module.exports = routes
