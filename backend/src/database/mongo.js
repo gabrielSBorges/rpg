@@ -21,7 +21,7 @@ module.exports = {
       return { status: "success", data };
     }
     catch (err) {
-      return { status: "error", message: err };
+      return { status: "error", message: err.message };
     }
   },
 
@@ -31,10 +31,10 @@ module.exports = {
     try {
       const data = await model.create(body);
 
-      return { status: "success", data };
+      return { status: "success", id: data._id };
     }
     catch (err) {
-      return { status: "error", message: err};
+      return { status: "error", message: err.message };
     }
   },
 
@@ -47,7 +47,7 @@ module.exports = {
       return { status: "success" };
     }
     catch (err) {
-      return { status: "error", message: err};
+      return { status: "error", message: err.message };
     }
   },
 
@@ -60,7 +60,7 @@ module.exports = {
       return { status: "success" };
     }
     catch (err) {
-      return { status: "error", message: err};
+      return { status: "error", message: err.message };
     }
   }
 }
