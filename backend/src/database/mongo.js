@@ -1,9 +1,9 @@
 module.exports = {
   async list(params) {
-    const { model, fields } = params;
-    
+    const { model, where , fields } = params;
+
     try {
-      const data = await model.find().select(fields.join(" ") || "");
+      const data = await model.find(where).select(fields ? fields.join(" ") : "");
   
       return { status: "success", data };
     }
@@ -16,12 +16,12 @@ module.exports = {
     const { model, where, fields } = params;
 
     try {
-      const data = await model.findOne(where).select(fields.join(" ") || "");
+      const data = await model.findOne(where).select(fields ? fields.join(" ") : "");
   
       return { status: "success", data };
     }
     catch (err) {
-      return { status: "error", message: err };
+      return { status: "error", message: err.message };
     }
   },
 
@@ -31,10 +31,10 @@ module.exports = {
     try {
       const data = await model.create(body);
 
-      return { status: "success", data };
+      return { status: "success", id: data._id };
     }
     catch (err) {
-      return { status: "error", message: err};
+      return { status: "error", message: err.message };
     }
   },
 
@@ -47,7 +47,7 @@ module.exports = {
       return { status: "success" };
     }
     catch (err) {
-      return { status: "error", message: err};
+      return { status: "error", message: err.message };
     }
   },
 
@@ -60,7 +60,7 @@ module.exports = {
       return { status: "success" };
     }
     catch (err) {
-      return { status: "error", message: err};
+      return { status: "error", message: err.message };
     }
   }
 }

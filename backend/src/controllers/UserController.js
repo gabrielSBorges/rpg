@@ -107,7 +107,7 @@ module.exports = {
             return response.status(500).json({ message: createUser.message });
           }
           else {
-            return response.json({ id: createUser.data._id, message: "User successfully created" });
+            return response.json({ id: createUser.id, message: "User successfully created" });
           }
         }
       })
