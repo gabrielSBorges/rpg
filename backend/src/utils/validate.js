@@ -1,10 +1,46 @@
+const mongoose = require('mongoose');
+
 module.exports = {
   isNumber(value) {
-    if (Object.prototype.toString.call(value) !== '[object Number]') {
-      return false
+    if (Object.prototype.toString.call(value) == '[object Number]') {
+      return true;
     }
   
-    return true
+    return false;
+  },
+
+  isArray(value) {
+    if (value) {
+      if (Object.prototype.toString.call(value) == '[object Array]') {
+        return true;
+      }
+    }
+    
+    return false;
+  },
+
+  isObject(value) {
+    if (Object.prototype.toString.call(value) == '[object Object]') {
+      return true;
+    }
+    
+    return false;
+  },
+
+  isMongoId(value) {
+    if (!value) {
+      return false;
+    }
+
+    if (Object.prototype.toString.call(value) == '[object Number]') {
+      return false;
+    }
+
+    if (mongoose.Types.ObjectId.isValid(value)) {
+      return true;
+    }
+
+    return false;
   },
   
   validEmail(value) {
@@ -13,7 +49,7 @@ module.exports = {
   },
 
   validPassword(value) {
-    const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$/
-    return re.test(value)
-  }
+    const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$/;
+    return re.test(value);
+  },
 }

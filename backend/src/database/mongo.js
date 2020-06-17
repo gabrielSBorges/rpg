@@ -1,9 +1,9 @@
 module.exports = {
   async list(params) {
-    const { model, fields } = params;
-    
+    const { model, where , fields } = params;
+
     try {
-      const data = await model.find().select(fields.join(" ") || "");
+      const data = await model.find(where).select(fields ? fields.join(" ") : "");
   
       return { status: "success", data };
     }
@@ -16,7 +16,7 @@ module.exports = {
     const { model, where, fields } = params;
 
     try {
-      const data = await model.findOne(where).select(fields.join(" ") || "");
+      const data = await model.findOne(where).select(fields ? fields.join(" ") : "");
   
       return { status: "success", data };
     }
