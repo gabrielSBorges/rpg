@@ -2,15 +2,11 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mongo = require('../database/mongo');
 const User = require('../models/User');
-const { validEmail, validPassword } = require('../utils/validate');
+const { validEmail, validPassword, MongoID } = require('../utils/validate');
 
-function validateFields(name, email, login, password) {
+function validateFields(name, email) {
   if (name.length < 4) {
     return { status: "error", message: "Name must contain at least 5 characters" };
-  }
-
-  if (login.length < 5) {
-    return { status: "error", message: "Login must contain at least 5 characters" };
   }
 
   if (!validEmail(email)) {
@@ -41,7 +37,7 @@ module.exports = {
 
     let params = {
       model: User,
-      where: { _id: id },
+      where: { _id: MongoID(id) },
       fields: ["name", "email", "login"]
     };
     let findUser = await mongo.findOne(params);
@@ -59,9 +55,9 @@ module.exports = {
   },
 
   async signup(request, response) {
-    const { name, email, login, password } = request.body;
+    const { name, email, password } = request.body;
     
-    const validate = validateFields(name, email, login);
+    const validate = validateFields(name, email);
 
     if (validate.status !== "success") {
       return response.status(400).json({ message: validate.message });
@@ -73,19 +69,18 @@ module.exports = {
 
     let params = {
       model: User,
-      where: { $or: [{email}, {login}] },
-      fields: ["email", "login"]
+      where: { email },
     };
-    let user = await mongo.findOne(params);
+    let countUsers = await mongo.count(params);
 
-    if (user.status !== "success") {
-      return response.status(500).json({ message: user.message });
+    if (countUsers.status !== "success") {
+      return response.status(500).json({ message: countUsers.message });
     }
     else {
-      user = user.data;
+      countUsers = countUsers.data;
     }
 
-    if (!user) {
+    if (countUsers == 0) {
       bcrypt.hash(password, 10, async (err, hash) => {
         if (err) {
           return response.status(500).json({ message: err });
@@ -96,7 +91,6 @@ module.exports = {
             body: {
               name,
               email,
-              login,
               password: hash,
             }
           };
@@ -113,19 +107,17 @@ module.exports = {
       })
     }
     else {
-      let already_taken = email == user.email && login == user.login ? ["email", "login"] : email == user.email ? ["email"] : ["login"];
-      
-      return response.status(400).json({ message: "User already exists", already_taken });
+      return response.status(400).json({ message: `E-mail '${email}' is already in use` });
     }
   },
 
   async login(request, response) {
-    const { login, password, expires } = request.body;
+    const { email, password, expires } = request.body;
 
     let params = {
       model: User,
-      where: { login },
-      fields: ["name", "email", "login", "password"]
+      where: { email },
+      fields: ["name", "email", "password"]
     };
     let user = await mongo.findOne(params);
 
@@ -143,9 +135,8 @@ module.exports = {
         if (res) {
           const token = jwt.sign(
             {
-              id: user._id,
+              id: MongoID(user._id),
               name: user.name,
-              login: user.login,
               email: user.email
             },
             process.env.JWT_KEY,
@@ -165,12 +156,12 @@ module.exports = {
   },
 
   async update(request, response) {
-    const { id } = request.params;
+    const { userData } = request;
 
     let params = {
       model: User,
-      where: { _id: id },
-      fields: ["name", "email", "login"]
+      where: { _id: MongoID(userData.id) },
+      fields: ["name", "email"]
     };
     let findUser = await mongo.findOne(params);
 
@@ -184,13 +175,12 @@ module.exports = {
       return response.status(400).json({ message: "User not found" });
     }
 
-    let { name, email, login } = request.body;
+    let { name, email } = request.body;
 
     name = name ? name : user.name;
     email = email ? email : user.email;
-    login = login ? login : user.login;
 
-    const validate = validateFields(name, email, login);
+    const validate = validateFields(name, email);
 
     if (validate.status !== "success") {
       return response.status(400).json({ message: validate.message });
@@ -198,29 +188,25 @@ module.exports = {
 
     params = {
       model: User,
-      where: { _id: { $ne: user._id }, $or: [{email}, {login}] },
-      fields: ["email", "login"]
+      where: { _id: { $ne: MongoID(user._id) }, email },
     };
-    findUser = await mongo.findOne(params);
+    countUsers = await mongo.count(params);
 
-    if (findUser.status == "success") {
-      if (findUser.data) {
-        let already_taken = email == findUser.data.email && login == findUser.data.login ? ["email", "login"] : email == findUser.data.email ? ["email"] : ["login"];
-    
-        return response.status(400).json({ message: "Already in use", already_taken });
+    if (countUsers.status == "success") {
+      if (countUsers.data !== 0) {
+        return response.status(400).json({ message: `E-mail '${email}' is already in use` });
       }
     }
     else {
-      return response.status(500).json({ message: findUser.message });
+      return response.status(500).json({ message: countUsers.message });
     }
 
     params = {
       model: User,
-      filter: { _id: id },
+      filter: { _id: MongoID(id) },
       body: {
         name,
         email,
-        login,
       }
     };
     let updateUser = await mongo.update(params);
@@ -233,21 +219,20 @@ module.exports = {
   },
 
   async updatePassword(request, response) {
-    const { id } = request.params;
+    const { userData } = request;
     const { password } = request.body;
 
     let params = {
       model: User,
-      where: { _id: id },
-      fields: ["_id"]
+      where: { _id: MongoID(userData.id) },
     };
-    let findUser = await mongo.findOne(params);
+    let countUsers = await mongo.count(params);
 
-    if (findUser.status !== "success") {
-      return response.status(500).json({ message: findUser.message });
+    if (countUsers.status !== "success") {
+      return response.status(500).json({ message: countUsers.message });
     }
 
-    if (!findUser.data) {
+    if (countUsers.data == 0) {
       return response.status(400).json({ message: "User not found" });
     }
 
@@ -262,7 +247,7 @@ module.exports = {
       else {
         params = {
           model: User,
-          filter: { _id: id },
+          filter: { _id: MongoID(userData.id) },
           body: {
             password: hash
           }
@@ -280,28 +265,25 @@ module.exports = {
   },
 
   async delete(request, response) {
-    const { id } = request.params;
+    const { userData } = request;
 
     let params = {
       model: User,
-      where: { _id: id },
-      fields: ["_id"]
+      where: { _id: MongoID(userData.id) },
     };
-    let findUser = await mongo.findOne(params);
+    let countUsers = await mongo.findOne(params);
 
-    if (findUser.status !== "success") {
-      return response.status(500).json({ message: findUser.message });
+    if (countUsers.status !== "success") {
+      return response.status(500).json({ message: countUsers.message });
     }
 
-    user = findUser.data;
-
-    if (!user) {
+    if (countUsers.data == 0) {
       return response.status(400).json({ message: "User not found" });
     }
       
     params = {
       model: User,
-      filter: { _id: id }
+      filter: { _id: MongoID(userData.id) }
     };
     let deleteUser = await mongo.delete(params);
 

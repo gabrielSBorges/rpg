@@ -1,9 +1,22 @@
 module.exports = {
+  async count(params) {
+    const { model, where } = params;
+
+    try {
+      const count = await model.countDocuments(where);
+
+      return { status: "success", data: count };
+    }
+    catch (err) {
+      return { status: "error", message: err };
+    }
+  },
+  
   async list(params) {
     const { model, where , fields } = params;
 
     try {
-      const data = await model.find(where).select(fields ? fields.join(" ") : "");
+      const data = await model.find(where).select(fields ? fields.join(" ") : "-iat -exp");
   
       return { status: "success", data };
     }
@@ -16,7 +29,7 @@ module.exports = {
     const { model, where, fields } = params;
 
     try {
-      const data = await model.findOne(where).select(fields ? fields.join(" ") : "");
+      const data = await model.findOne(where).select(fields ? fields.join(" ") : "-iat -exp");
   
       return { status: "success", data };
     }
