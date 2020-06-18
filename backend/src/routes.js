@@ -8,9 +8,9 @@ const routes = Router();
 // Users
 routes.post('/login', UserController.login);
 routes.post('/signup', UserController.signup);
-routes.put('/users/:id', auth, UserController.update);
-routes.put('/update-password/:id', auth, UserController.updatePassword);
-routes.delete('/users/:id', auth, UserController.delete);
+routes.put('/users', auth, UserController.update);
+routes.put('/update-password', auth, UserController.updatePassword);
+routes.delete('/users', auth, UserController.delete);
 routes.get('/users/list', auth, UserController.list);
 routes.get('/users/:id', auth, UserController.findById);
 
