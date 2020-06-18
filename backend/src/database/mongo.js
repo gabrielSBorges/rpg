@@ -52,10 +52,10 @@ module.exports = {
   },
 
   async update(params) {
-    const { model, filter, body } = params;
+    const { model, where, body } = params;
 
     try {
-      await model.findOneAndUpdate(filter, body);
+      await model.findOneAndUpdate(where, body);
 
       return { status: "success" };
     }
@@ -65,10 +65,10 @@ module.exports = {
   },
 
   async delete(params) {
-    const { model, filter } = params;
+    const { model, where } = params;
 
     try {
-      await model.findOneAndDelete(filter);
+      await model.findOneAndDelete(where);
 
       return { status: "success" };
     }
