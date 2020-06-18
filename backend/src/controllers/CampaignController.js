@@ -1,7 +1,7 @@
 const mongo = require('../database/mongo');
 const Campaign = require('../models/Campaign');
 const User = require('../models/User');
-const { isArray, isMongoId, MongoID } = require('../utils/validate');
+const { isArray, isMongoId, MongoID, sameMongoId } = require('../utils/validate');
 
 module.exports = {
   async findCampaignsAsMaster(request, response) {
@@ -10,7 +10,7 @@ module.exports = {
     let params = {
       model: Campaign,
       where: {
-        master_id: MongoID(userData.id)
+        'master.user_id': MongoID(userData.id)
       },
       fields: ["_id", "name"]
     };
@@ -19,9 +19,8 @@ module.exports = {
     if (listCampaigns.status !== 'success') {
       return response.status(500).json({ message: listCampaigns.message });
     }
-    else {
-      return response.json(listCampaigns.data);
-    }
+
+    return response.json(listCampaigns.data);
   },
   
   async findCampaignsAsPlayer(request, response) {
@@ -39,9 +38,8 @@ module.exports = {
     if (listCampaigns.status !== 'success') {
       return response.status(500).json({ message: listCampaigns.message });
     }
-    else {
-      return response.json(listCampaigns.data);
-    }
+
+    return response.json(listCampaigns.data);
   },
 
   async findMasterAndPlayerCampaigns(request, response) {
@@ -50,7 +48,7 @@ module.exports = {
     let params = {
       model: Campaign,
       where: {
-        master_id: MongoID(userData.id)
+        'master.user_id': MongoID(userData.id)
       },
       fields: ["_id", "name"]
     };
@@ -91,8 +89,8 @@ module.exports = {
       model: Campaign,
       body: {
         name,
-        master_id: MongoID(userData.id),
-        masterData: {
+        master: {
+          user_id: MongoID(userData.id),
           name: userData.name,
           email: userData.email
         }
@@ -103,47 +101,80 @@ module.exports = {
     if (createCampaign.status !== 'success') {
       return response.status(500).json({ message: createCampaign.message });
     }
-    else {
-      return response.json({ id: createCampaign.id, message: "Campaign was successfully created" });
-    }
+
+    return response.json({ id: createCampaign.id, message: "Campaign was successfully created" });
   },
 
   async update(request, response) {
+    const { userData } = request;
     const { id } = request.params;
     const { name } = request.body;
 
     let params = {
       model: Campaign,
-      where: { _id: id },
+      where: { _id: MongoID(id) },
+      fields: ["master"],
     };
     let findCampaign = await mongo.findOne(params);
 
     if (findCampaign.status !== 'success') {
       return response.status(500).json({ message: findCampaign.message });
     }
-    else {
-      params = {
-        model: Campaign,
-        where: { _id: id },
-        body: {
-          name
-        }
-      };
-      let updateCampaign = await mongo.update(params);
 
-      if (updateCampaign.status !== 'success') {
-        return response.status(500).json({ message: updateCampaign.message });
-      }
-      else {
-        return response.json({ message: "Campaign was successfully updated" });
-      }
+    let campaign = findCampaign.data;
+
+    if (!campaign) {
+      return response.status(400).json({ message: "Campaign not found" });
     }
+
+    if (!sameMongoId(campaign.master.user_id, userData.id)) {
+      return response.status(400).json({ message: "You can only update your own campaigns" });
+    }
+
+    params = {
+      model: Campaign,
+      where: { _id: MongoID(id) },
+      body: {
+        name
+      }
+    };
+    let updateCampaign = await mongo.update(params);
+
+    if (updateCampaign.status !== 'success') {
+      return response.status(500).json({ message: updateCampaign.message });
+    }
+
+    return response.json({ message: "Campaign was successfully updated" });
   },
 
-  async addPlayer(request, response) {
+  async addPlayers(request, response) {
+    const { userData } = request;
     const { id } = request.params;
     const { users } = request.body;
     
+    // Verifica se a campanha existe e se o usuário é o mestre dela
+    params = {
+      model: Campaign,
+      where: { _id: id },
+      fields: ["master", "players"]
+    };
+    let campaign = await mongo.findOne(params);
+
+    if (campaign.status !== "success") {
+      return response.status(500).json({ message: campaign.message });
+    }
+
+    campaign = campaign.data;
+
+    if (!campaign) {
+      return response.status(400).json({ message: "Campaign not found" })
+    }
+
+    if (!sameMongoId(campaign.master.user_id, userData.id)) {
+      return response.status(400).json({ message: "You can only add players to your own campaigns" });
+    }
+
+    // Verifica se os ids passados são válidos e os adiciona em um array
     if (!isArray(users)) {
       return response.status(400).json({ message: 'Field users must be an array with at least one user ID' });
     }
@@ -160,88 +191,87 @@ module.exports = {
         return response.status(400).json({ message: `ID '${id.toString()}' is not a valid Mongo ID` });
       }
       
-      params.where = { _id: id };
+      params.where = { _id: MongoID(id) };
       let user = await mongo.findOne(params);
 
       if (user.status !== 'success') {
         return response.status(500).json({ message: user.message });
       }
       else {
-        let user_id = user.data._id;
+        user = user.data
 
-        users_ids.push(user_id);
+        if (!user) {
+          return response.status(400).json({ message: `User not found`, not_found: [ id ] })
+        }
+
+        users_ids.push(user._id);
+      }
+    }
+
+    // Verifica se o usuário já está no array de players, se não estiver ele é adicionado
+    let players_ids = [];
+
+    for (let player of campaign.players) {
+      players_ids.push(player.user_id.toString()); 
+    }
+
+    for (let user_id of users_ids) {
+      if (!players_ids.includes(user_id.toString())) {
+        campaign.players.push({ user_id: MongoID(user_id) });
       }
     }
 
     params = {
       model: Campaign,
-      where: { _id: id },
-      fields: ["players"]
+      where: { _id: MongoID(id) },
+      body: {
+        players: campaign.players
+      }
     };
-    let campaign = await mongo.findOne(params);
+    let addPlayer = await mongo.update(params);
 
-    if (campaign.status !== "success") {
-      return response.status(500).json({ message: campaign.message });
+    if (addPlayer.status !== 'success') {
+      return response.status(500).json({ message: addPlayer.message });
     }
-    else {
-      campaign = campaign.data;
 
-      let players_ids = [];
-
-      for (let player of campaign.players) {
-        players_ids.push(player.user_id.toString()); 
-      }
-
-      for (let user_id of users_ids) {
-        if (!players_ids.includes(user_id.toString())) {
-          campaign.players.push({ user_id });
-        }
-      }
-
-      params = {
-        model: Campaign,
-        where: { _id: id },
-        body: {
-          players: campaign.players
-        }
-      };
-      let addPlayer = await mongo.update(params);
-
-      if (addPlayer.status !== 'success') {
-        return response.status(500).json({ message: addPlayer.message });
-      }
-      else {
-        return response.json({ message: "Players list was successfully updated" });
-      }
-    }
+    return response.json({ message: "Players list was successfully updated" });
   },
 
   async delete(request, response) {
+    const { userData } = request;
     const { id } = request.params;
 
     let params = {
       model: Campaign,
       where: { _id: id },
-      fields: ["_id"]
+      fields: ["_id", "master"]
     };
-    let findCampaign = await mongo.findOne(params);
+    let campaign = await mongo.findOne(params);
 
-    if (findCampaign.status !== "success") {
-      return response.status(500).json({ message: findCampaign.message});
+    if (campaign.status !== "success") {
+      return response.status(500).json({ message: campaign.message});
     }
-    else {
-      params = {
-        model: Campaign,
-        where: { _id: id }
-      };
-      let deleteCampaign = await mongo.delete(params);
 
-      if (deleteCampaign.status !== "success") {
-        return response.status(500).json({ message: deleteCampaign.message });
-      }
-      else {
-        return response.json({ message: "Campaign was successfully deleted" });
-      }
+    campaign = campaign.data;
+
+    if (!campaign) {
+      return response.status(400).json({ message: "Campaign not found" });
     }
+
+    if (!sameMongoId(campaign.master.user_id, userData.id)) {
+      return response.status(400).json({ message: "You can only delete your own campaigns" });
+    }
+    
+    params = {
+      model: Campaign,
+      where: { _id: id }
+    };
+    let deleteCampaign = await mongo.delete(params);
+
+    if (deleteCampaign.status !== "success") {
+      return response.status(500).json({ message: deleteCampaign.message });
+    }
+
+    return response.json({ message: "Campaign was successfully deleted" });
   },
 }

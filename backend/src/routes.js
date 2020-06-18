@@ -17,7 +17,7 @@ routes.get('/users/:id', auth, UserController.findById);
 // Campaigns
 routes.post('/campaigns', auth, CampaignController.create);
 routes.put('/campaigns/:id', auth, CampaignController.update);
-routes.put('/campaigns/add-players/:id', auth, CampaignController.addPlayer);
+routes.put('/campaigns/add-players/:id', auth, CampaignController.addPlayers);
 routes.get('/campaigns/master-player', auth, CampaignController.findMasterAndPlayerCampaigns);
 routes.get('/campaigns/master', auth, CampaignController.findCampaignsAsMaster);
 routes.get('/campaigns/player', auth, CampaignController.findCampaignsAsPlayer);

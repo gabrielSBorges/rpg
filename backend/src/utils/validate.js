@@ -43,6 +43,14 @@ module.exports = {
     return false;
   },
 
+  sameMongoId(id_1, id_2) {
+    if (id_1.toString() == id_2.toString()) {
+      return true;
+    }
+
+    return false;
+  },
+
   MongoID(value) {
     return mongoose.Types.ObjectId(value);
   },
