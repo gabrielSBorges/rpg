@@ -1,8 +1,7 @@
-const mongoose = require('mongoose');
 const mongo = require('../database/mongo');
 const Campaign = require('../models/Campaign');
 const User = require('../models/User');
-const { isArray, isMongoId } = require('../utils/validate');
+const { isArray, isMongoId, MongoID } = require('../utils/validate');
 
 module.exports = {
   async findCampaignsAsMaster(request, response) {
@@ -11,7 +10,7 @@ module.exports = {
     let params = {
       model: Campaign,
       where: {
-        master_id: mongoose.Types.ObjectId(userData.id)
+        master_id: MongoID(userData.id)
       },
       fields: ["_id", "name"]
     };
@@ -31,7 +30,7 @@ module.exports = {
     let params = {
       model: Campaign,
       where: {
-        'players.user_id': mongoose.Types.ObjectId(userData.id)
+        'players.user_id': MongoID(userData.id)
       },
       fields: ["_id", "name"]
     };
@@ -51,7 +50,7 @@ module.exports = {
     let params = {
       model: Campaign,
       where: {
-        master_id: mongoose.Types.ObjectId(userData.id)
+        master_id: MongoID(userData.id)
       },
       fields: ["_id", "name"]
     };
@@ -64,7 +63,7 @@ module.exports = {
     params = {
       model: Campaign,
       where: {
-        'players.user_id': mongoose.Types.ObjectId(userData.id)
+        'players.user_id': MongoID(userData.id)
       },
       fields: ["_id", "name"]
     };
@@ -92,7 +91,7 @@ module.exports = {
       model: Campaign,
       body: {
         name,
-        master_id: mongoose.Types.ObjectId(userData.id),
+        master_id: MongoID(userData.id),
         masterData: {
           name: userData.name,
           email: userData.email
@@ -125,7 +124,7 @@ module.exports = {
     else {
       params = {
         model: Campaign,
-        filter: { _id: id },
+        where: { _id: id },
         body: {
           name
         }
@@ -201,7 +200,7 @@ module.exports = {
 
       params = {
         model: Campaign,
-        filter: { _id: id },
+        where: { _id: id },
         body: {
           players: campaign.players
         }
@@ -233,7 +232,7 @@ module.exports = {
     else {
       params = {
         model: Campaign,
-        filter: { _id: id }
+        where: { _id: id }
       };
       let deleteCampaign = await mongo.delete(params);
 

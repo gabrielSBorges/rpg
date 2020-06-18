@@ -203,7 +203,7 @@ module.exports = {
 
     params = {
       model: User,
-      filter: { _id: MongoID(id) },
+      where: { _id: MongoID(id) },
       body: {
         name,
         email,
@@ -247,7 +247,7 @@ module.exports = {
       else {
         params = {
           model: User,
-          filter: { _id: MongoID(userData.id) },
+          where: { _id: MongoID(userData.id) },
           body: {
             password: hash
           }
@@ -283,7 +283,7 @@ module.exports = {
       
     params = {
       model: User,
-      filter: { _id: MongoID(userData.id) }
+      where: { _id: MongoID(userData.id) }
     };
     let deleteUser = await mongo.delete(params);
 
