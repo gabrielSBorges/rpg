@@ -20,7 +20,7 @@ module.exports = {
   async list(request, response) {
     let params = {
       model: User,
-      fields: ["name", "email", "login"]
+      fields: ["name", "email"]
     };
     const findUsers = await mongo.list(params);
 
@@ -38,7 +38,7 @@ module.exports = {
     let params = {
       model: User,
       where: { _id: MongoID(id) },
-      fields: ["name", "email", "login"]
+      fields: ["name", "email"]
     };
     let findUser = await mongo.findOne(params);
 
@@ -188,7 +188,7 @@ module.exports = {
 
     params = {
       model: User,
-      where: { _id: { $ne: MongoID(user._id) }, email },
+      where: { _id: { $ne: MongoID(userData.id) }, email },
     };
     countUsers = await mongo.count(params);
 
@@ -203,7 +203,7 @@ module.exports = {
 
     params = {
       model: User,
-      where: { _id: MongoID(id) },
+      where: { _id: MongoID(userData.id) },
       body: {
         name,
         email,
@@ -224,13 +224,15 @@ module.exports = {
 
     let params = {
       model: User,
-      where: { _id: MongoID(userData.id) },
+      where: { _id: userData.id },
     };
     let countUsers = await mongo.count(params);
 
     if (countUsers.status !== "success") {
       return response.status(500).json({ message: countUsers.message });
     }
+
+    console.log(userData);
 
     if (countUsers.data == 0) {
       return response.status(400).json({ message: "User not found" });
