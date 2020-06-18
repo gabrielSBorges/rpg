@@ -23,4 +23,6 @@ routes.get('/campaigns/master', auth, CampaignController.findCampaignsAsMaster);
 routes.get('/campaigns/player', auth, CampaignController.findCampaignsAsPlayer);
 routes.delete('/campaigns/:id', auth, CampaignController.delete);
 
+// Characters
+
 module.exports = routes;
