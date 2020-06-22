@@ -9,6 +9,17 @@ module.exports = {
     return false;
   },
 
+  isBool(value) {
+    if (value !== null && value !== undefined) {
+      if (Object.prototype.toString.call(value) == '[object Boolean]') {
+        return true;
+      }
+    }
+
+    console.log(value);
+    return false;
+  },
+
   isArray(value) {
     if (value) {
       if (Object.prototype.toString.call(value) == '[object Array]') {

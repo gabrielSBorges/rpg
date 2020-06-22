@@ -16,7 +16,7 @@ module.exports = {
     const { model, where , fields } = params;
 
     try {
-      const data = await model.find(where).select(fields ? fields.join(" ") : "-iat -exp");
+      const data = await model.find(where).select(fields ? fields.join(" ") : "-iat -exp -__v");
   
       return { status: "success", data };
     }
@@ -29,7 +29,7 @@ module.exports = {
     const { model, where, fields } = params;
 
     try {
-      const data = await model.findOne(where).select(fields ? fields.join(" ") : "-iat -exp");
+      const data = await model.findOne(where).select(fields ? fields.join(" ") : "-iat -exp -__v");
   
       return { status: "success", data };
     }
