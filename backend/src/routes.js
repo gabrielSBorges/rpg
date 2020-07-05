@@ -2,6 +2,7 @@ const { Router } = require('express');
 const UserController = require('./controllers/UserController');
 const CampaignController = require('./controllers/CampaignController');
 const RecordSheetController = require('./controllers/RecordSheetController');
+const CharacterController = require('./controllers/CharacterController');
 const auth = require('./middleware/auth');
 
 const routes = Router();
@@ -31,5 +32,8 @@ routes.get('/record-sheets', auth, RecordSheetController.getMyRecordSheets);
 routes.post('/record-sheets', auth, RecordSheetController.create);
 routes.put('/record-sheets/:id', auth, RecordSheetController.update);
 routes.delete('/record-sheets/:id', auth, RecordSheetController.delete);
+
+// Characters
+routes.post('/characters', auth, CharacterController.create);
 
 module.exports = routes;

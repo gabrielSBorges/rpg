@@ -1,143 +1,40 @@
 const mongo = require('../database/mongo');
 const RecordSheet = require('../models/RecordSheet');
-const { isArray, isObject, isBool, MongoID, sameMongoId } = require('../utils/validate');
+const { isArray, isEmpty, isBool, MongoID, sameMongoId } = require('../utils/validate');
 
-function validateHeader(header) {
-  if (!header) {
-    return { status: "error", message: `Field 'header' is required and must have at least one item` };
+function validateValues(object, type) {
+  const { data_type, name, description, show_name, required } = object;
+  
+  // Validar data_type (int, float, string)
+  let validDataTypes = ['int', 'float', 'string']
+  if (!validDataTypes.includes(data_type)) {
+    return { status: 'error', message: `Invalid value for field 'data_type'. Valid values: ${validDataTypes.join(', ')}` };
   }
-  else if (!isArray(header)) {
-    return { status: "error", message: `Field 'header' must be an array` };
+  
+  // Validar name
+  if (isEmpty(name)) {
+    return { status: 'error', message: "Field 'name' cannot be empty" };
   }
-  else {
-    for (let i in header) {
-      if (!isObject(header[i])) {
-        return { status: "error", message: `Item ${parseInt(i) + 1} from 'header' must be an object` };
-      }
-      else {
-        let validate = validateFields(header[i]);
 
-        if (validate.status !== "success") {
-          return { status: "error", message: `[Item ${parseInt(i) + 1} from 'header']: ${validate.message}` };
-        }
-      }
+  // Validar show_name (true, false)
+  if (!isBool(show_name)) {
+    return { status: 'error', message: "Field 'show_name' must be boolean" };
+  }
+  
+  // Se type == 'form'
+  if (type == 'form') {
+    // Validar description
+    if (isEmpty(description)) {
+      return { status: 'error', message: "Field 'descrition' cannot be empty" };
+    }
+
+    // Validar required
+    if (!isBool(required)) {
+      return { status: 'error', message: "Field 'required' must be boolean" };
     }
   }
 
-  return { status: "success" };
-}
-
-function validateSections(sections) {
-  if (!sections) {
-    return { status: "error", message: `Field 'sections' is required and must have at least one item` };
-  }
-  else if (!isArray(sections)) {
-    return { status: "error", message: `Field 'sections' must be an array` };
-  }
-  else {
-    for (let i in sections) {
-      let { name, show_name, fields } = sections[i];
-
-      if (name === undefined) {
-        return { status: "error", message: `[Item ${parseInt(i) + 1} from 'sections']: Field 'name' is required` };
-      }
-
-      if (!isBool(show_name)) {
-        return { status: "error", message: `[Item ${parseInt(i) + 1} from 'sections']: Field 'show_name' must be a boolean.` };
-      }
-
-      if (!fields) {
-        return { status: "error", message: `Field 'fields' is required and must have at least one item` };
-      }
-      if (!isArray(fields)) {
-        return { status: "error", message: `Field 'fields' from 'sections' must be an array` };
-      }
-      else {
-        for (let f in fields) {
-          let validate = validateFields(fields[f], false);
-
-          if (validate.status !== "success") {
-            return { status: "error", message: `[Item ${parseInt(i) + 1} from 'sections'][Item ${parseInt(f) + 1} from 'fields']: ${validate.message}` };
-          }
-        }
-      }
-    }
-  }
-
-  return { status: "success" };
-}
-
-function validateLists(lists) {
-  if (!lists) {
-    return { status: "error", message: `Field 'lists' is required and must have at least one item` };
-  }
-  else if (!isArray(lists)) {
-    return { status: "error", message: `Field 'lists' must be an array` };
-  }
-  else {
-    for (let i in lists) {
-      let { name, show_name, columns } = lists[i];
-
-      if (name === undefined) {
-        return { status: "error", message: `[Item ${parseInt(i) + 1} from 'lists']: Field 'name' is required` };
-      }
-
-      if (!columns) {
-        return { status: "error", message: `[Item ${parseInt(i) + 1} from 'lists']: Field 'columns' is required and must have at least one item` };
-      }
-      if (!isArray(columns)) {
-        return { status: "error", message: `[Item ${parseInt(i) + 1} from 'lists']: Field 'columns' from 'lists' must be an array` };
-      }
-      else {
-        for (let c in columns) {
-          if (!columns[c].name) {
-            return { status: "error", message: `[Item ${parseInt(i) + 1} from 'lists'][Item ${parseInt(c) + 1} from 'columns']: Field 'name' is required.` };
-          }
-
-          if (!columns[c].type) {
-            return { status: "error", message: `[Item ${parseInt(i) + 1} from 'lists'][Item ${parseInt(c) + 1} from 'columns']: Field 'type' is required.` };
-          }
-          else {
-            let validTypes = ["string", "int"];
-
-            if (!validTypes.includes(columns[c].type)) {
-              return { status: "error", message: `[Item ${parseInt(i) + 1} from 'lists'][Item ${parseInt(c) + 1} from 'columns']: Type '${columns[c].type}' is invalid. Valid types: ${validTypes.join(", ")}` };
-            }
-          }
-          
-          if (columns[c].show_name == null && columns[c].show_name == undefined) {
-            return { status: "error", message: `[Item ${parseInt(i) + 1} from 'lists'][Item ${parseInt(c) + 1} from 'columns']: Field 'show_name' is required.` };
-          }
-
-          if (!isBool(columns[c].show_name)) {
-            return { status: "error", message: `[Item ${parseInt(i) + 1} from 'lists'][Item ${parseInt(c) + 1} from 'columns']: Field 'show_name' must be a boolean.` };
-          }
-        }
-      }
-    }
-  }
-
-  return { status: "success" };
-}
-
-function validateFields(fields) {
-  const { type, name, description } = fields;
-
-  const validTypes = ["string", "int", "float"];
-
-  if (!validTypes.includes(type)) {
-    return { status: "error", message: `Type '${type}' is invalid. Valid types: ${validTypes.join(", ")}` };
-  }
-
-  if (!name) {
-    return { status: "error", message: `Field 'name' cannot be empty` };
-  }
-
-  if (!description) {
-    return { status: "error", message: `Field 'description' cannot be empty` };
-  }
-
-  return { status: "success" }
+  return { status: 'success' };
 }
 
 module.exports = {
@@ -177,46 +74,80 @@ module.exports = {
 
   async create(request, response) {
     const { userData } = request;
-    const { name, header, sections, lists, public } = request.body;
+    const { name, sections, public } = request.body;
     
     // Validar nome
     if (!name) {
-      return response.status(400).json({ message: `Name cannot be empty` });
-    }
-
-    let validate;
-
-    // Validar header
-    validate = validateHeader(header);
-    if (validate.status !== 'success') {
-      return response.status(400).json({ message: validate.message });
+      return response.status(400).json({ message: `Field 'name' cannot be empty` });
     }
 
     // Validar sections
-    validate = validateSections(sections);
-    if (validate.status !== 'success') {
-      return response.status(400).json({ message: validate.message });
+    if (!isArray(sections)) {
+      return response.status(400).json({ message: `Field 'sections' must be an array` });
     }
-    
-    // Validar lists
-    validate = validateLists(lists);
-    if (validate.status !== 'success') {
-      return response.status(400).json({ message: validate.message });
+
+    if (isEmpty(sections)) {
+      return response.status(400).json({ message: `Field 'sections' cannot be empty` });
+    }
+
+    // Para cada section
+    for (let s in sections) {
+      // Validar name
+      if (!sections[s].name) {
+        return response.status(400).json({ message: `[Item ${s} in sections] Field 'name' cannot be empty` });
+      }
+
+      // Validar type (form, list)
+      validTypes = ["form", "list"];
+      if (!validTypes.includes(sections[s].type)) {
+        return response.status(400).json({ message: `[Item ${s} in sections] Invalid value for field 'type'. Valid values: ${validTypes.join(", ")}` });
+      }
+
+      // Validar show_name (true, false)
+      if (!isBool(sections[s].show_name)) {
+        return response.status(400).json({ message: `[Item ${s} in sections] Field 'show_name' must be boolean` });
+      }
+
+      // Se type == form
+      if (sections[s].type == 'form') {
+        // Para cada field:
+        for (let f in sections[s].fields) {
+          let field = sections[s].fields[f];
+
+          let validate = validateValues(field, 'form');
+
+          if (validate.status !== 'success') {
+            return response.status(400).json({ message: `[Item ${s} in sections][Item ${f} in fields] ${validate.message}` });
+          }
+        }
+      }
+      
+      // Se type == list
+      if (sections[s].type == "list") {
+        // Para cada column:
+        for (let c in sections[s].columns) {
+          let column = sections[s].columns[c];
+          
+          let validate = validateValues(column, 'list');
+
+          if (validate.status !== 'success') {
+            return response.status(400).json({ message: `[Item ${s} in sections][Item ${c} in columns] ${validate.message}` });
+          }
+        }  
+      }
     }
 
     // Validar public
     if (!isBool(public)) {
-      return response.status(400).json({ message: `Field 'public' must be a boolean` });
+      return response.status(400).json({ message: `Field 'public' must be boolean` });
     }
 
     // Adicionar id do usuário no user_id
     let params = {
       model: RecordSheet,
       body: {
-        name, 
-        header, 
+        name,
         sections,
-        lists,
         public,
         user_id: MongoID(userData.id)
       }
@@ -224,7 +155,7 @@ module.exports = {
     let createRecordSheet = await mongo.create(params);
 
     if (createRecordSheet.status !== 'success') {
-      return response.status(500).json({ message: createRecordSheet.message })
+      return response.status(500).json({ message: createRecordSheet.message });
     }
     
     return response.json({ id: createRecordSheet.id, message: 'Record sheet successfully created'});
@@ -233,7 +164,7 @@ module.exports = {
   async update(request, response) {
     const { userData } = request;
     const { id } = request.params;
-    const { name, header, sections, lists, public } = request.body;
+    const { name, sections, public } = request.body;
     
     // Verificar se a ficha existe
     let params = {
@@ -250,7 +181,7 @@ module.exports = {
     recordSheet = recordSheet.data;
 
     if (!recordSheet) {
-      return response.status(400).json({ message: "Record sheet not found" })
+      return response.status(400).json({ message: "Record sheet not found" });
     }
 
     // Verificar se a ficha é do usuário
@@ -263,24 +194,51 @@ module.exports = {
       return response.status(400).json({ message: `Name cannot be empty` });
     }
 
-    let validate;
+    // Para cada section
+    for (let s in sections) {
+      // Validar name
+      if (!sections[s].name) {
+        return response.status(400).json({ message: `[Item ${s + 1} in sections] Field 'name' cannot be empty` });
+      }
 
-    // Validar header
-    validate = validateHeader(header);
-    if (validate.status !== 'success') {
-      return response.status(400).json({ message: validate.message });
-    }
+      // Validar type (form, list)
+      validTypes = ["form", "list"];
+      if (!validTypes.includes(sections[s].type)) {
+        return response.status(400).json({ message: `[Item ${s + 1} in sections] Invalid value for field 'type'. Valid values: ${validTypes.join(", ")}` });
+      }
 
-    // Validar sections
-    validate = validateSections(sections);
-    if (validate.status !== 'success') {
-      return response.status(400).json({ message: validate.message });
-    }
-    
-    // Validar lists
-    validate = validateLists(lists);
-    if (validate.status !== 'success') {
-      return response.status(400).json({ message: validate.message });
+      // Validar show_name (true, false)
+      if (!isBool(sections[s].show_name)) {
+        return response.status(400).json({ message: `[Item ${s + 1} in sections] Field 'show_name' must be boolean` });
+      }
+
+      // Se type == form
+      if (sections[s].type == 'form') {
+        // Para cada field:
+        for (let f in sections[s].fields) {
+          let field = sections[s].fields[f];
+
+          let validate = validateValues(field, 'form')
+
+          if (validate.status !== 'success') {
+            return response.status(400).json({ message: `[Item ${s + 1} in sections][Item ${f + 1} in fields] ${validate.message}` });
+          }
+        }
+      }
+      
+      // Se type == list
+      if (sections[s].type == "list") {
+        // Para cada column:
+        for (let c in sections[s].columns) {
+          let column = sections[s].columns[c]
+          
+          let validate = validateValues(column, 'list')
+
+          if (validate.status !== 'success') {
+            return response.status(400).json({ message: `[Item ${s + 1} in sections][Item ${c + 1} in columns] ${validate.message}` });
+          }
+        }  
+      }
     }
 
     // Validar public
@@ -292,17 +250,15 @@ module.exports = {
       model: RecordSheet,
       where: { _id: MongoID(id) },
       body: {
-        name, 
-        header, 
+        name,
         sections,
-        lists,
         public
       }
     };
     let updateRecordSheet = await mongo.update(params);
 
     if (updateRecordSheet.status !== 'success') {
-      return response.status(500).json({ message: updateRecordSheet.message })
+      return response.status(500).json({ message: updateRecordSheet.message });
     }
     
     return response.json({ id: updateRecordSheet.id, message: 'Record sheet successfully updated'});

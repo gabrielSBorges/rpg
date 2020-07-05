@@ -232,8 +232,6 @@ module.exports = {
       return response.status(500).json({ message: countUsers.message });
     }
 
-    console.log(userData);
-
     if (countUsers.data == 0) {
       return response.status(400).json({ message: "User not found" });
     }

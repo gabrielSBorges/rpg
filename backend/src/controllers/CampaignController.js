@@ -5,6 +5,7 @@ const User = require('../models/User');
 const { isArray, isMongoId, MongoID, sameMongoId } = require('../utils/validate');
 
 module.exports = {
+  // Busca campanhas que o usuário participa como mestre
   async findCampaignsAsMaster(request, response) {
     const { userData } = request;
 
@@ -24,6 +25,7 @@ module.exports = {
     return response.json(listCampaigns.data);
   },
   
+  // Busca campanhas que usuário participa como jogador
   async findCampaignsAsPlayer(request, response) {
     const { userData } = request;
 
@@ -43,6 +45,7 @@ module.exports = {
     return response.json(listCampaigns.data);
   },
 
+  // Busca todas as campanhas que o usuário esteja associado
   async findMasterAndPlayerCampaigns(request, response) {
     const { userData } = request;
 
