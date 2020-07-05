@@ -16,7 +16,6 @@ module.exports = {
       }
     }
 
-    console.log(value);
     return false;
   },
 
@@ -36,6 +35,38 @@ module.exports = {
     }
     
     return false;
+  },
+
+  isEmpty(value) {
+    // Se for string
+    if (Object.prototype.toString.call(value) == '[object String]') {
+      value = value.replace(/\s/g,'')
+      
+      if (value === "") {
+        return true
+      }
+    }
+
+    // Se for array
+    if (Object.prototype.toString.call(value) == '[object Array]') {
+      if (value.length == 0) {
+        return true
+      }
+    }
+
+    // Se for objeto
+    if (Object.prototype.toString.call(value) == '[object Object]') {
+      if (Object.keys(value).length == 0) {
+        return true
+      }
+    }
+
+    // Se for null ou undefined
+    if (Object.prototype.toString.call(value) == '[object Null]' || Object.prototype.toString.call(value) == '[object Undefined]') {
+      return true
+    }
+    
+    return false
   },
 
   isMongoId(value) {
