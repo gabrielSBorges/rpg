@@ -9,6 +9,30 @@ module.exports = {
     return false;
   },
 
+  isString(value) {
+    if (Object.prototype.toString.call(value) == '[object String]') {
+      return true;
+    }
+  
+    return false;
+  },
+
+  isInteger(value) {
+    if (Number.isInteger(value)) {
+      return true;
+    }
+
+    return false;
+  },
+
+  isFloat(value) {
+    if (!Number.isInteger(value) && Object.prototype.toString.call(value) == '[object Number]') {
+      return true;
+    }
+
+    return false;
+  },
+
   isBool(value) {
     if (value !== null && value !== undefined) {
       if (Object.prototype.toString.call(value) == '[object Boolean]') {

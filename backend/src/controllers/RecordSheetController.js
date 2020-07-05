@@ -1,9 +1,9 @@
 const mongo = require('../database/mongo');
 const RecordSheet = require('../models/RecordSheet');
-const { isArray, isObject, isEmpty, isBool, MongoID, sameMongoId } = require('../utils/validate');
+const { isArray, isEmpty, isBool, MongoID, sameMongoId } = require('../utils/validate');
 
 function validateValues(object, type) {
-  const { data_type, name, description, show_name } = object;
+  const { data_type, name, description, show_name, required } = object;
   
   // Validar data_type (int, float, string)
   let validDataTypes = ['int', 'float', 'string']
@@ -21,10 +21,16 @@ function validateValues(object, type) {
     return { status: 'error', message: "Field 'show_name' must be boolean" };
   }
   
-  // Validar description
+  // Se type == 'form'
   if (type == 'form') {
+    // Validar description
     if (isEmpty(description)) {
       return { status: 'error', message: "Field 'descrition' cannot be empty" };
+    }
+
+    // Validar required
+    if (!isBool(required)) {
+      return { status: 'error', message: "Field 'required' must be boolean" };
     }
   }
 
@@ -111,7 +117,7 @@ module.exports = {
           let validate = validateValues(field, 'form');
 
           if (validate.status !== 'success') {
-            return response.status(400).json(`[Item ${s} in sections][Item ${f} in fields] ${validate.message}`);
+            return response.status(400).json({ message: `[Item ${s} in sections][Item ${f} in fields] ${validate.message}` });
           }
         }
       }
@@ -125,7 +131,7 @@ module.exports = {
           let validate = validateValues(column, 'list');
 
           if (validate.status !== 'success') {
-            return response.status(400).json(`[Item ${s} in sections][Item ${c} in columns] ${validate.message}`);
+            return response.status(400).json({ message: `[Item ${s} in sections][Item ${c} in columns] ${validate.message}` });
           }
         }  
       }
@@ -215,7 +221,7 @@ module.exports = {
           let validate = validateValues(field, 'form')
 
           if (validate.status !== 'success') {
-            return response.status(400).json(`[Item ${s + 1} in sections][Item ${f + 1} in fields] ${validate.message}`);
+            return response.status(400).json({ message: `[Item ${s + 1} in sections][Item ${f + 1} in fields] ${validate.message}` });
           }
         }
       }
@@ -229,7 +235,7 @@ module.exports = {
           let validate = validateValues(column, 'list')
 
           if (validate.status !== 'success') {
-            return response.status(400).json(`[Item ${s + 1} in sections][Item ${c + 1} in columns] ${validate.message}`);
+            return response.status(400).json({ message: `[Item ${s + 1} in sections][Item ${c + 1} in columns] ${validate.message}` });
           }
         }  
       }
