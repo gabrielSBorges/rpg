@@ -155,6 +155,12 @@ module.exports = {
     
   },
 
+  async getMe(request, response) {
+    const { userData } = request;
+
+    return response.json({ user: userData })
+  },
+
   async update(request, response) {
     const { userData } = request;
 

@@ -5,8 +5,13 @@ module.exports = (request, response, next) => {
 
   try {
     const decoded = jwt.verify(authorization, process.env.JWT_KEY);
+    const { id, name, email } = decoded;
 
-    request.userData = decoded;
+    request.userData = {
+      id,
+      name,
+      email
+    };
 
     next();
   }
