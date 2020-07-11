@@ -128,7 +128,7 @@ module.exports = {
       user = user.data;
   
       if (!user) {
-        return response.status(401).json({ message: "Auth failed" });
+        return response.status(401).json({ message: "Login failed" });
       }
 
       bcrypt.compare(password, user.password, async (err, res) => {
@@ -164,12 +164,12 @@ module.exports = {
                 return response.status(500).json({ message: saveToken.message });
               }
     
-              return response.json({ message: "Auth successful", token });
+              return response.json({ message: "Login successful", token });
             }
           });
         }
         else {
-          return response.status(401).json({ message: "Auth failed" });
+          return response.status(401).json({ message: "Login failed" });
         }
       });
     }

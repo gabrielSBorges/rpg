@@ -1,5 +1,5 @@
 import Vue from 'vue'
-// import RBtn from '~/components/geral/RBtn.vue'
+import AppTitle from '~/components/texts/AppTitle.vue'
 
-// Vue.use(RBtn)
-// Vue.component('r-btn', RBtn)
+Vue.use(AppTitle)
+Vue.component('app-title', AppTitle)
