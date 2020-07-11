@@ -131,7 +131,7 @@ module.exports = {
         return response.status(401).json({ message: "Auth failed" });
       }
 
-      bcrypt.compare(password, user.password, (err, res) => {
+      bcrypt.compare(password, user.password, async (err, res) => {
         if (res) {
           const token = jwt.sign(
             {
@@ -145,7 +145,28 @@ module.exports = {
             }
           );
 
-          return response.json({ message: "Auth successful", token });
+          // Salvar o token no banco
+          bcrypt.hash(token, 10, async (err, hash) => {
+            if (err) {
+              return response.status(500).json({ message: err });
+            }
+            else {
+              params = {
+                body: {
+                  user_id: MongoID(user._id),
+                  token: hash
+                }
+              };
+    
+              let saveToken = await mongo.saveToken(params);
+
+              if (saveToken.status !== "success") {
+                return response.status(500).json({ message: saveToken.message });
+              }
+    
+              return response.json({ message: "Auth successful", token });
+            }
+          });
         }
         else {
           return response.status(401).json({ message: "Auth failed" });
@@ -157,8 +178,22 @@ module.exports = {
 
   async getMe(request, response) {
     const { userData } = request;
+    const { id, name, email } = userData;
 
-    return response.json({ user: userData })
+    return response.json({ user: { id, name, email } });
+  },
+
+  async logout(request, response) {
+    const { userData } = request;
+    
+    // Excluir o token do banco
+    let deleteToken = await mongo.deleteToken(MongoID(userData.id));
+
+    if (deleteToken.status !== "success") {
+      return response.status(500).json({ message: deleteToken.message });
+    }
+
+    return response.json({ message: "Successfully logout" });
   },
 
   async update(request, response) {

@@ -11,6 +11,7 @@ const routes = Router();
 routes.post('/login', UserController.login);
 routes.post('/signup', UserController.signup);
 routes.get('/me', auth, UserController.getMe);
+routes.delete('/logout', auth, UserController.logout);
 routes.put('/users', auth, UserController.update);
 routes.put('/update-password', auth, UserController.updatePassword);
 routes.delete('/users', auth, UserController.delete);
