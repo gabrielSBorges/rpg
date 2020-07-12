@@ -30,7 +30,7 @@
     <v-app-bar fixed app dense>
       <template v-if="$auth.loggedIn">
         <v-toolbar-title v-text="$auth.user.name" />
-        <v-btn @click="$auth.logout()">Sair</v-btn>
+        <v-btn @click="logout()">Sair</v-btn>
       </template>
 
       <template v-else>
@@ -48,6 +48,7 @@
 
 <script>
   export default {
+    middleware: 'auth',
     data () {
       return {
         drawer: true,
@@ -65,6 +66,15 @@
           }
         ],
         title: 'RPG SYSTEM'
+      }
+    },
+    methods: {
+      logout() {
+        this.$auth.logout()
+
+        this.showSuccessMessage('Até a próxima!')
+
+        this.$router.push('/login')
       }
     }
   }
