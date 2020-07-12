@@ -1,3 +1,5 @@
+const Token = require('../models/Token');
+
 module.exports = {
   async count(params) {
     const { model, where } = params;
@@ -71,6 +73,45 @@ module.exports = {
       await model.findOneAndDelete(where);
 
       return { status: "success" };
+    }
+    catch (err) {
+      return { status: "error", message: err.message };
+    }
+  },
+
+  async saveToken(params) {
+    const { body } = params;
+
+    try {
+      await Token.findOneAndDelete({ user_id: body.user_id });
+      
+      await Token.create(body);
+
+      return { status: "success" };
+    }
+    catch (err) {
+      return { status: "error", message: err.message };
+    }
+  },
+
+  async deleteToken(user_id) {
+    try {
+      await Token.findOneAndDelete({ user_id: user_id });
+
+      return { status: "success" };
+    }
+    catch (err) {
+      return { status: "error", message: err.message };
+    }
+  },
+
+  async findToken(user_id) {
+    try {
+      let findToken = await Token.findOne({ user_id });
+
+      let token = findToken ? findToken.token : ''
+
+      return { status: "success", token: token };
     }
     catch (err) {
       return { status: "error", message: err.message };

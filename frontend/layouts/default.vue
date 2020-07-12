@@ -1,13 +1,15 @@
 <template>
   <v-app dark>
-    <v-navigation-drawer
-      v-model="drawer"
-      :mini-variant="miniVariant"
-      :clipped="clipped"
-      fixed
-      app
-    >
-      <v-list>
+    <v-navigation-drawer v-model="drawer" :mini-variant="miniVariant" fixed app>
+      <v-list class="pa-0">
+        <v-list-item>
+          <v-btn icon @click.stop="miniVariant = !miniVariant">
+            <v-icon>mdi-{{ `chevron-${miniVariant ? 'right' : 'left'}` }}</v-icon>
+          </v-btn>
+        </v-list-item>
+      </v-list>
+
+      <v-list class="pa-0">
         <v-list-item
           v-for="(item, i) in items"
           :key="i"
@@ -24,77 +26,33 @@
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
-    <v-app-bar
-      :clipped-left="clipped"
-      fixed
-      app
-    >
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-      <v-btn
-        icon
-        @click.stop="miniVariant = !miniVariant"
-      >
-        <v-icon>mdi-{{ `chevron-${miniVariant ? 'right' : 'left'}` }}</v-icon>
-      </v-btn>
-      <v-btn
-        icon
-        @click.stop="clipped = !clipped"
-      >
-        <v-icon>mdi-application</v-icon>
-      </v-btn>
-      <v-btn
-        icon
-        @click.stop="fixed = !fixed"
-      >
-        <v-icon>mdi-minus</v-icon>
-      </v-btn>
-      <v-toolbar-title v-text="title" />
-      <v-spacer />
-      <v-btn
-        icon
-        @click.stop="rightDrawer = !rightDrawer"
-      >
-        <v-icon>mdi-menu</v-icon>
-      </v-btn>
+
+    <v-app-bar fixed app dense>
+      <template v-if="$auth.loggedIn">
+        <v-toolbar-title v-text="$auth.user.name" />
+        <v-btn @click="logout()">Sair</v-btn>
+      </template>
+
+      <template v-else>
+        <v-toolbar-title v-text="title" />
+      </template>
     </v-app-bar>
-    <v-content>
+
+    <v-main>
       <v-container>
         <nuxt />
       </v-container>
-    </v-content>
-    <v-navigation-drawer
-      v-model="rightDrawer"
-      :right="right"
-      temporary
-      fixed
-    >
-      <v-list>
-        <v-list-item @click.native="right = !right">
-          <v-list-item-action>
-            <v-icon light>
-              mdi-repeat
-            </v-icon>
-          </v-list-item-action>
-          <v-list-item-title>Switch drawer (click me)</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
-    <v-footer
-      :fixed="fixed"
-      app
-    >
-      <span>&copy; {{ new Date().getFullYear() }}</span>
-    </v-footer>
+    </v-main>
   </v-app>
 </template>
 
 <script>
   export default {
+    middleware: 'auth',
     data () {
       return {
-        clipped: false,
-        drawer: false,
-        fixed: false,
+        drawer: true,
+        miniVariant: true,
         items: [
           {
             icon: 'mdi-apps',
@@ -107,11 +65,24 @@
             to: '/inspire'
           }
         ],
-        miniVariant: false,
-        right: true,
-        rightDrawer: false,
-        title: 'Vuetify.js'
+        title: 'RPG SYSTEM'
+      }
+    },
+    methods: {
+      logout() {
+        this.$auth.logout()
+
+        this.showSuccessMessage('Até a próxima!')
+
+        this.$router.push('/login')
       }
     }
   }
 </script>
+
+<style>
+  .v-list-item__content{
+    justify-content: right;
+    display: grid;
+  }
+</style>

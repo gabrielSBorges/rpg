@@ -52,14 +52,64 @@ export default {
   */
   modules: [
     // Doc: https://axios.nuxtjs.org/usage
-    '@nuxtjs/axios'
+    '@nuxtjs/axios',
+    '@nuxtjs/auth',
+    '@nuxtjs/toast'
   ],
+
+  toast: {
+    position: 'top-center',
+    theme: 'bubble',
+    duration: 3000,
+    register: [
+      {
+        name: 'alert',
+        theme: 'bubble',
+        message: message => message,
+        options: {
+          type: 'alert',
+          theme: 'bubble',
+          duration: 4000
+        }
+      },
+      {
+        name: 'error',
+        theme: 'bubble',
+        message: message => message,
+        options: {
+          type: 'error',
+          theme: 'bubble',
+          duration: 4000
+        }
+      },
+    ]
+  },
+
+  auth: {
+    strategies: {
+      local: {
+        endpoints: {
+          login: { url: '/login', method: 'post', propertyName: 'token' },
+          logout: { url: '/logout', method: 'delete' },
+          user: { url: '/me', method: 'get', propertyName: 'user' }
+        },
+        tokenType: '',
+        // tokenRequired: true,
+        // autoFetchUser: true
+      }
+    }
+  },
+
+  router: {
+    
+  },
 
   /*
   ** Axios module configuration
   ** See https://axios.nuxtjs.org/options
   */
   axios: {
+    baseURL: 'http://localhost:3333'
   },
 
   /*
@@ -78,7 +128,7 @@ export default {
           info: colors.teal.lighten1,
           warning: colors.amber.base,
           error: colors.deepOrange.accent4,
-          success: colors.green.accent3
+          success: colors.green.darken1
         }
       }
     }
