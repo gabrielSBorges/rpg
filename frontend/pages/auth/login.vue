@@ -19,13 +19,22 @@
       async loginUser(userInfo) {
         const { email, password } = userInfo
 
-        let response = await this.$auth.loginWith('local', {
-          data: {
-            email,
-            password,
-            expires: 84000
-          }
-        })
+        try {
+          let response = await this.$auth.loginWith('local', {
+            data: {
+              email,
+              password,
+              expires: 84000
+            }
+          })
+  
+          this.showSuccessMessage(`Bem vindo, ${this.$auth.user.name}!`)
+          
+          this.$router.push('/')
+        }
+        catch(error) {
+          this.showErrorMessage('Email ou senha incorretos!')
+        }
       }
     }
   }

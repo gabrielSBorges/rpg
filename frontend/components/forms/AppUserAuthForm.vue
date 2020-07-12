@@ -50,8 +50,8 @@
         valid: false,
         showPassword: false,
         userInfo: {
-          email: 'gabriel@gmail.com',
-          password: 'Gab@051097'
+          email: '',
+          password: ''
         },
         ...validate
       }

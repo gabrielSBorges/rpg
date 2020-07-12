@@ -18,15 +18,24 @@
       async registerUser(userInfo) {
         const { email, password } = userInfo
 
-        await this.$axios.post('/signup', userInfo)
+        try {
+          await this.$axios.post('/signup', userInfo)
+  
+          let response = await this.$auth.loginWith('local', {
+            data: {
+              email,
+              password,
+              expires: 84000
+            }
+          })
 
-        let response = await this.$auth.loginWith('local', {
-          data: {
-            email,
-            password,
-            expires: 84000
-          }
-        })
+          this.showSuccessMessage(`Conta cadastrada com sucesso. Bem vindo, ${this.$auth.user.name}!`)
+
+          this.$router.push('/')
+        }
+        catch(error) {
+          this.showErrorMessage('Não conseguimos te cadastrar, tente novamente.')
+        }
       }
     }
   }

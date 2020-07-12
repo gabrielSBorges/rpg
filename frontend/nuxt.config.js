@@ -53,8 +53,37 @@ export default {
   modules: [
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
-    '@nuxtjs/auth'
+    '@nuxtjs/auth',
+    '@nuxtjs/toast'
   ],
+
+  toast: {
+    position: 'top-center',
+    theme: 'bubble',
+    duration: 3000,
+    register: [
+      {
+        name: 'alert',
+        theme: 'bubble',
+        message: message => message,
+        options: {
+          type: 'alert',
+          theme: 'bubble',
+          duration: 4000
+        }
+      },
+      {
+        name: 'error',
+        theme: 'bubble',
+        message: message => message,
+        options: {
+          type: 'error',
+          theme: 'bubble',
+          duration: 4000
+        }
+      },
+    ]
+  },
 
   auth: {
     strategies: {
