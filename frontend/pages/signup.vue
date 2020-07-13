@@ -29,9 +29,9 @@
             }
           })
 
-          this.showSuccessMessage(`Conta cadastrada com sucesso. Bem vindo, ${this.$auth.user.name}!`)
-
           this.$router.push('/')
+
+          this.showSuccessMessage(`Conta cadastrada com sucesso. Bem vindo, ${this.$auth.user.name}!`)
         }
         catch(error) {
           this.showErrorMessage('Não conseguimos te cadastrar, tente novamente.')

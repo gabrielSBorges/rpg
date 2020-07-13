@@ -1,43 +1,33 @@
 <template>
   <v-app dark>
-    <v-navigation-drawer v-model="drawer" :mini-variant="miniVariant" fixed app>
-      <v-list class="pa-0">
-        <v-list-item>
-          <v-btn icon @click.stop="miniVariant = !miniVariant">
-            <v-icon>mdi-{{ `chevron-${miniVariant ? 'right' : 'left'}` }}</v-icon>
-          </v-btn>
-        </v-list-item>
-      </v-list>
-
-      <v-list class="pa-0">
-        <v-list-item
-          v-for="(item, i) in items"
-          :key="i"
-          :to="item.to"
-          router
-          exact
-        >
-          <v-list-item-action>
-            <v-icon>{{ item.icon }}</v-icon>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title v-text="item.title" />
-          </v-list-item-content>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
-
-    <v-app-bar fixed app dense>
-      <template v-if="$auth.loggedIn">
-        <v-toolbar-title v-text="$auth.user.name" />
-        <v-btn @click="logout()">Sair</v-btn>
-      </template>
-
-      <template v-else>
-        <v-toolbar-title v-text="title" />
-      </template>
+    <!-- Barra título do sistema -->
+    <v-app-bar flat fixed app clipped-left dense>
+      <v-toolbar-title>RPG REMOTO</v-toolbar-title>
+      
+      <v-spacer></v-spacer>
+      
+      <v-btn icon small @click="logout()" class="mr-0">
+        <v-icon>mdi-logout</v-icon>
+      </v-btn>
     </v-app-bar>
 
+    <!-- Menu lateral esquerdo | lista das campanhas -->
+    <v-navigation-drawer v-model="drawer" clipped :mini-variant="miniVariant"  fixed app>
+      <!-- Informações do usuário -->
+      <app-list-menu :items="userProfile" />
+      
+      <v-divider/>
+
+      <!-- Campanhas como jogador -->
+      <app-list-menu :items="campaignsAsPlayer"/>
+
+      <v-divider/>
+
+      <!-- Campanhas como mestre -->
+      <app-list-menu :items="campaignsAsMaster"/>
+    </v-navigation-drawer>
+
+    <!-- Conteudo -->
     <v-main>
       <v-container>
         <nuxt />
@@ -47,25 +37,60 @@
 </template>
 
 <script>
+  import AppListMenu from '~/components/misc/AppListMenu.vue'
+
   export default {
     middleware: 'auth',
+    components: {
+      AppListMenu,
+    },
     data () {
       return {
         drawer: true,
         miniVariant: true,
-        items: [
+        title: 'RPG SYSTEM',
+
+        // Contéúdo da lista do menu lateral esquerdo
+        userProfile : [
           {
-            icon: 'mdi-apps',
-            title: 'Welcome',
+            icon: 'mdi-home',
+            title: 'Início',
             to: '/'
           },
+        ],
+
+        campaignsAsPlayer : [
           {
-            icon: 'mdi-chart-bubble',
-            title: 'Inspire',
-            to: '/inspire'
+            icon: 'mdi-elevation-decline',
+            title: 'Nargol',
+            to: '/campaigns?id=212'
+          },
+          {
+            icon: 'mdi-elevation-decline',
+            title: 'Lavent',
+            to: '/campaigns?id=2121'
+          },
+          {
+            icon: 'mdi-magnify',
+            title: 'Procurar campanhas',
+            to: '/campaigns/find',
+            noCard: true,
           }
         ],
-        title: 'RPG SYSTEM'
+
+        campaignsAsMaster : [
+          {
+            icon: 'mdi-elevation-rise',
+            title: 'Campanha Fictícia',
+            to: '/campaigns?id=215'
+          },
+          {
+            icon: 'mdi-plus',
+            title: 'Nova campanha',
+            to: '/campaigns/new',
+            noCard: true,
+          },
+        ],
       }
     },
     methods: {
@@ -84,5 +109,9 @@
   .v-list-item__content{
     justify-content: right;
     display: grid;
+  }
+
+  .app-separator {
+    height: 20px;
   }
 </style>
