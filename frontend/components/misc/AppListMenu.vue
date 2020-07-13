@@ -25,8 +25,7 @@
 <script>
   export default {
     props: {
-      items: { type: Object, default: () => {} },
-
+      items: { type: Array, default: () => [] },
     }
   }
 </script>
