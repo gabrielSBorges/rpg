@@ -12,7 +12,7 @@
     },
     data() {
       return {
-
+        logged: this.$auth.loggedIn,
       }
     },
     methods: {
@@ -35,6 +35,11 @@
         catch(error) {
           this.showErrorMessage('Email ou senha incorretos!')
         }
+      }
+    },
+    created() {
+      if (this.logged) {
+        this.$router.push('/')
       }
     }
   }

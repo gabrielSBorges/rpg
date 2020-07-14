@@ -97,9 +97,11 @@
       logout() {
         this.$auth.logout()
 
+        setTimeout(() => {
+          this.$router.push('/login')
+        }, 1000)
+        
         this.showSuccessMessage('Até a próxima!')
-
-        this.$router.push('/login')
       }
     }
   }

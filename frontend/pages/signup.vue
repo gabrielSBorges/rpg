@@ -11,7 +11,7 @@
     },
     data() {
       return {
-
+        logged: this.$auth.loggedIn,
       }
     },
     methods: {
@@ -36,6 +36,11 @@
         catch(error) {
           this.showErrorMessage('Não conseguimos te cadastrar, tente novamente.')
         }
+      }
+    },
+    created() {
+      if (this.logged) {
+        this.$router.push('/')
       }
     }
   }
