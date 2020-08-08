@@ -19,15 +19,15 @@
 </template>
 
 <script>
-export default {
-  layout: 'external',
-  props: {
-    error: {
-      type: Object,
-      default: null
-    }
-  },
-}
+  export default {
+    layout: 'external',
+    props: {
+      error: {
+        type: Object,
+        default: null
+      }
+    },
+  }
 </script>
 
 <style scoped>

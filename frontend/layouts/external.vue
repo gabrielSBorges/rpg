@@ -14,6 +14,6 @@
 
 <script>
   export default {
-    
+    layout: 'screen'
   }
 </script>

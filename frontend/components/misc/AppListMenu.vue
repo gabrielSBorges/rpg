@@ -7,13 +7,13 @@
       router
       exact
     >
-      <v-list-item-action class="text-center">
+      <v-list-item-action>
         <v-card class="pa-2">
           <v-icon>{{ item.icon }}</v-icon>
         </v-card>
       </v-list-item-action>
       
-      <v-list-item-content>
+      <v-list-item-content class="justify-start">
         <v-list-item-title v-text="item.title" />
       </v-list-item-content>
     </v-list-item>
